@@ -27,7 +27,7 @@ if (ret):
 
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(25, 25))  
 
-        frame = cv2.GaussianBlur(frame, (3, 3), 1.2);
+        frame = cv2.GaussianBlur(frame, (3, 3), 1.2)
         mask1 = cv2.inRange(frame, np.array([100, 0, 125]), np.array([255, 255, 167]))
 
         mask1 = cv2.morphologyEx(mask1, cv2.MORPH_CLOSE, kernel)  
