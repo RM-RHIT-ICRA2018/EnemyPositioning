@@ -5,6 +5,27 @@ import math
 import json
 
 
+def detect_object(frame_bgr):
+    frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+    frame_hsv = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2HSV)
+    frame_hsv = cv2.GaussianBlur(frame_hsv, (3, 3), 1.2)
+
+    # define range of color red in HSV space
+    upper_red = np.array([10, 255, 255])
+    lower_red = np.array([0, 100, 100])
+
+    # create color red mask
+    mask = cv2.inRange(frame_hsv, lower_red, upper_red)
+    res = cv2.bitwise_and(frame_hsv, frame_hsv, mask=mask)
+
+    cv2.imshow('orig', frame_bgr)
+    cv2.imshow('frame', frame_hsv)
+    cv2.imshow('mask', mask)
+    cv2.imshow('res', res)
+
+    return None
+
+
 def process_camera(client, broker_address):
     videoIn = cv2.VideoCapture(0)
     videoIn.set(cv2.CAP_PROP_BRIGHTNESS, 0.05)
@@ -14,30 +35,17 @@ def process_camera(client, broker_address):
     client.loop_start()
     ret = 1
     if (ret):
-        while 1:
+        while True:
             ret, frame_bgr = videoIn.read()
 
-            frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-            frame_hsv = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2HSV)
-            frame_hsv = cv2.GaussianBlur(frame_hsv, (3, 3), 1.2)
+            # detect target
+            marker = detect_object(frame_bgr)
 
-            # define range of color red in HSV space
-            upper_red = np.array([10, 255, 255])
-            lower_red = np.array([0, 100, 100])
-
-            # create color red mask
-            mask = cv2.inRange(frame_hsv, lower_red, upper_red)
-
-            res = cv2.bitwise_and(frame_hsv, frame_hsv, mask=mask)
-
-            cv2.imshow('orig', frame_bgr)
-            cv2.imshow('frame', frame_hsv)
-            cv2.imshow('mask', mask)
-            cv2.imshow('res', res)
+            # measure distance
+            measure_distance(marker)
 
             # cv2.Calicv.CalibrateCamera2(, imageSize = 1920 * 1080)
             # kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(25, 25))
-            # frame = cv2.GaussianBlur(frame, (3, 3), 1.2);
 
             json_data = json.dumps({
                 'EnemyXC': 0,
@@ -50,7 +58,6 @@ def process_camera(client, broker_address):
             print("Publishing message to topic", "ENEMIES/EnemyXC")
             client.publish("ENEMIES/EnemyXC", json_data)
             cv2.waitKey(1)
-
     else:
         raise RuntimeError("Error while reading from camera.")
     client.loop_stop()
