@@ -18,32 +18,57 @@ def detect_object(frame_bgr):
     mask = cv2.inRange(frame_hsv, lower_red, upper_red)
     res = cv2.bitwise_and(frame_hsv, frame_hsv, mask=mask)
 
+    ret, thresh = cv2.threshold(mask, 127, 255, 0)
+    im2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
+    cnt = contours[0]
+    x, y, w, h = cv2.boundingRect(cnt)
+    cv2.rectangle(frame_bgr, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    M = cv2.moments(cnt)
+    print(M)
+    cx = int(M['m10']/M['m00'])
+    cy = int(M['m01']/M['m00'])
+
     cv2.imshow('orig', frame_bgr)
     cv2.imshow('frame', frame_hsv)
     cv2.imshow('mask', mask)
     cv2.imshow('res', res)
 
-    return None
+    return cx, cy
 
 
 def process_camera(client, broker_address):
-    videoIn = cv2.VideoCapture(0)
-    videoIn.set(cv2.CAP_PROP_BRIGHTNESS, 0.05)
-    videoIn.set(cv2.CAP_PROP_EXPOSURE, -9)
-    print("capture device is open: " + str(videoIn.isOpened()))
+    camera1 = cv2.VideoCapture(0)
+    camera2 = cv2.VideoCapture(1)
+    camera3 = cv2.VideoCapture(2)
+    camera4 = cv2.VideoCapture(3)
+    # camera5 = cv2.VideoCapture(4)
+    # camera6 = cv2.VideoCapture(5)
+    # camera7 = cv2.VideoCapture(6)
+    # camera8 = cv2.VideoCapture(7)
+    camera1.set(cv2.CAP_PROP_BRIGHTNESS, 0.05)
+    camera1.set(cv2.CAP_PROP_EXPOSURE, -9)
+    print("capture device is open: " + str(camera1.isOpened()))
+    print("capture device is open: " + str(camera2.isOpened()))
+    print("capture device is open: " + str(camera3.isOpened()))
+    print("capture device is open: " + str(camera4.isOpened()))
     client.connect(broker_address, 1883, 60)
     client.loop_start()
     ret = 1
     if (ret):
         while True:
-            ret, frame_bgr = videoIn.read()
+            ret, frame_bgr = camera1.read()
+            ret2, frame_bgr_2 = camera2.read()
+            ret3, frame_bgr_3 = camera3.read()
+            ret4, frame_bgr_4 = camera4.read()
 
             # detect target
-            marker = detect_object(frame_bgr)
+            centroid_x, centroid_y = detect_object(frame_bgr)
 
             # measure distance
             measure_distance(marker)
 
+            # calibrate both cameras
             # cv2.Calicv.CalibrateCamera2(, imageSize = 1920 * 1080)
             # kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(25, 25))
 
