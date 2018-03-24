@@ -41,11 +41,12 @@ def detect_object(frame):
         x, y, w, h = cv2.boundingRect(max_area)
         cv2.drawContours(frame_bgr, max_area, -1, 255, 3)
         cv2.rectangle(frame_bgr, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        # M = cv2.moments(max_area)
-        # cx = int(M['m10']/M['m00'])
-        # cy = int(M['m01']/M['m00'])
-        # print(cx, cy)
-        # cv2.putText(frame_bgr, "point: " + cx + " " + cy, cv2.Point(cx, cy))
+        M = cv2.moments(max_area)
+        cx = int(M['m10']/M['m00'])
+        cy = int(M['m01']/M['m00'])
+        cv2.circle(frame_bgr, (cx, cy), 10, (0, 255, 0), -1)
+        cv2.putText(frame_bgr, "cx: " + str(cx) + " cy: " + str(cy), (cx + 20, cy + 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
     cv2.imshow('orig', frame_bgr)
     # cv2.imshow('frame', frame_filterd)
