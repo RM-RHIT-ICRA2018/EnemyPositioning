@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 import numpy as np
 import math
 import json
+import device
 # import matplotlib.pyplot as plt
 
 
@@ -11,7 +12,7 @@ def detect_object(frame):
     frame_rgb = np.asarray(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB))
     frame_gray = np.asarray(cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY))
 
-    frame_sub = frame_rgb[:, :, 0]
+    frame_sub = frame_rgb[:, :, 0] - frame_gray
 
     # cv2.imshow('frame', frame_filterd)
     # cv2.imshow('red', frame_rgb[:, :, 0])
@@ -32,10 +33,11 @@ def detect_object(frame):
     # mask = cv2.inRange(frame_hsv, lower_red, upper_red)
     # res = cv2.bitwise_and(frame_hsv, frame_hsv, mask=mask)
 
-    ret, thresh = cv2.threshold(frame_filterd, 100, 1, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(frame_filterd, 50, 1, cv2.THRESH_BINARY)
     cv2.imshow('thresh', thresh)
     im2, contours, hierarchy = cv2.findContours(thresh, 0, 1)
     # cnt = contours[0]
+
     if len(contours) != 0:
         max_area = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(max_area)
@@ -63,6 +65,7 @@ def measure_distance():
 def process_camera():
     camera1 = cv2.VideoCapture(1)
     camera2 = cv2.VideoCapture(2)
+    print(device.getDeviceList())
     # camera3 = cv2.VideoCapture(2)
     # camera4 = cv2.VideoCapture(3)
     # camera5 = cv2.VideoCapture(4)
