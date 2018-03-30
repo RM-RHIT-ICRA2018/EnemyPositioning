@@ -3,8 +3,6 @@ import paho.mqtt.client as mqtt
 import numpy as np
 import math
 import json
-import device
-# import matplotlib.pyplot as plt
 
 
 def detect_object(frame):
@@ -20,22 +18,10 @@ def detect_object(frame):
     # print(frame_gray)
     # print(frame_sub)
     frame_filterd = cv2.medianBlur(frame_sub, 3)
-    # cv2.imshow('orig', frame_filterd)
 
-    # frame_hsv = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2HSV)
-    # frame_hsv = cv2.GaussianBlur(frame_hsv, (3, 3), 1.2)
-
-    # define range of color red in HSV space
-    # upper_red = np.array([10, 255, 255])
-    # lower_red = np.array([0, 100, 100])
-
-    # create color red mask
-    # mask = cv2.inRange(frame_hsv, lower_red, upper_red)
-    # res = cv2.bitwise_and(frame_hsv, frame_hsv, mask=mask)
-
-    ret, thresh = cv2.threshold(frame_filterd, 50, 1, cv2.THRESH_BINARY)
-    cv2.imshow('thresh', thresh)
-    im2, contours, hierarchy = cv2.findContours(thresh, 0, 1)
+    ret, thresh = cv2.threshold(frame_filterd, 50, 255, cv2.THRESH_BINARY)
+    cv2.imshow('should be binary', thresh)
+    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # cnt = contours[0]
 
     if len(contours) != 0:
@@ -46,7 +32,7 @@ def detect_object(frame):
         M = cv2.moments(max_area)
         cx = int(M['m10']/M['m00'])
         cy = int(M['m01']/M['m00'])
-        cv2.circle(frame_bgr, (cx, cy), 10, (0, 255, 0), -1)
+        cv2.circle(frame_bgr, (cx, cy), 5, (0, 255, 0), -1)
         cv2.putText(frame_bgr, "cx: " + str(cx) + " cy: " + str(cy), (cx + 20, cy + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
@@ -65,7 +51,6 @@ def measure_distance():
 def process_camera():
     camera1 = cv2.VideoCapture(1)
     camera2 = cv2.VideoCapture(2)
-    print(device.getDeviceList())
     # camera3 = cv2.VideoCapture(2)
     # camera4 = cv2.VideoCapture(3)
     # camera5 = cv2.VideoCapture(4)
