@@ -5,18 +5,15 @@ import math
 import json
 
 
-def detect_object(frame):
+def detect_object(frame, index):
     frame_bgr = frame
     frame_rgb = np.asarray(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB))
     frame_gray = np.asarray(cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY))
-
+    
+    # inds = np.where((frame_rgb[:, :, 1] < 250) & (frame_rgb[:, :, 1] < 250))
+    # frame_rgb[inds] 
     frame_sub = frame_rgb[:, :, 0] - frame_gray
 
-    # cv2.imshow('frame', frame_filterd)
-    # cv2.imshow('red', frame_rgb[:, :, 0])
-    # plt.plot()
-    # print(frame_gray)
-    # print(frame_sub)
     frame_filterd = cv2.medianBlur(frame_sub, 3)
 
     ret, thresh = cv2.threshold(frame_filterd, 50, 255, cv2.THRESH_BINARY)
@@ -25,7 +22,7 @@ def detect_object(frame):
     # cnt = contours[0]
 
     if len(contours) != 0:
-        max_area = max(contours, key=cv2.contourArea)
+        # max_area = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(max_area)
         cv2.drawContours(frame_bgr, max_area, -1, 255, 3)
         cv2.rectangle(frame_bgr, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -36,58 +33,50 @@ def detect_object(frame):
         cv2.putText(frame_bgr, "cx: " + str(cx) + " cy: " + str(cy), (cx + 20, cy + 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-    cv2.imshow('orig', frame_bgr)
-    # cv2.imshow('frame', frame_filterd)
-    # cv2.imshow('mask', mask)
-    # cv2.imshow('res', res)
-
-    # return cx, cy
+    cv2.imshow(index, frame_bgr)
+    return cx, cy
 
 
-def measure_distance():
+def measure_distance(cx1, cy1, cx2, cy2):
+    
     pass
 
 
-def process_camera():
+def process_camera(broker_address):
     camera1 = cv2.VideoCapture(1)
     camera2 = cv2.VideoCapture(2)
-    # camera3 = cv2.VideoCapture(2)
-    # camera4 = cv2.VideoCapture(3)
-    # camera5 = cv2.VideoCapture(4)
-    # camera6 = cv2.VideoCapture(5)
-    # camera7 = cv2.VideoCapture(6)
-    # camera8 = cv2.VideoCapture(7)
-    camera1.set(cv2.CAP_PROP_BRIGHTNESS, 0)
-    camera1.set(cv2.CAP_PROP_EXPOSURE, -8)
-    camera1.set(cv2.CAP_PROP_CONTRAST, 32)
-    # camera2.set(cv2.CAP_PROP_BRIGHTNESS, 0)
-    # camera2.set(cv2.CAP_PROP_EXPOSURE, -8)
+ 
+    camera1.set(cv2.CAP_PROP_BRIGHTNESS, -100)
+    camera1.set(cv2.CAP_PROP_EXPOSURE, -13)
+    # camera1.set(cv2.CAP_PROP_CONTRAST, 32)
+    camera2.set(cv2.CAP_PROP_BRIGHTNESS, -100)
+    camera2.set(cv2.CAP_PROP_EXPOSURE, -13)
     # camera2.set(cv2.CAP_PROP_CONTRAST, 32)
-    print("capture device is open: " + str(camera1.isOpened()))
-    # print("capture device is open: " + str(camera2.isOpened()))
-    # print("capture device is open: " + str(camera3.isOpened()))
-    # print("capture device is open: " + str(camera4.isOpened()))
+
+    print(camera1.get(cv2.CAP_PROP_BRIGHTNESS))
+    print(camera1.get(cv2.CAP_PROP_EXPOSURE))
+    
+    print("capture 1 is open: " + str(camera1.isOpened()))
+    print("capture 2 is open: " + str(camera2.isOpened()))
+
     # client.connect(broker_address, 1883, 60)
     # client.loop_start()
+
     ret = 1
     ret2 = 1
     if (ret & ret2):
         while True:
+            #ret = camera1.grab()
+            #ret = camera2.grab()
             ret, frame_bgr = camera1.read()
-            # ret2, frame_bgr_2 = camera2.read()
-            # ret3, frame_bgr_3 = camera3.read()
-            # ret4, frame_bgr_4 = camera4.read()
+            ret2, frame_bgr_2 = camera2.read()
 
             # detect target
-            detect_object(frame_bgr)
-            # detect_object(frame_bgr_2)
+            cx1, cy1 = detect_object(frame_bgr, 'cam 1')
+            cx2, cy2 = detect_object(frame_bgr_2, 'cam 2')
 
             # measure distance
-            # measure_distance(marker)
-
-            # calibrate both cameras
-            # cv2.Calicv.CalibrateCamera2(, imageSize = 1920 * 1080)
-            # kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(25, 25))
+            measure_distance(cx1, cy1, cx2, cy2)
 
             json_data = json.dumps({
                 'EnemyXC': 0,
@@ -118,11 +107,11 @@ def on_message(client, userdata, message):
 
 def main():
     # client = mqtt.Client("EP1")
-    # broker_address = "127.0.0.1"
+    broker_address = "127.0.0.1"
     # client.on_connect = on_connect  # attach function to callback
     # client.on_message = on_message  # attach function to callback
 
-    process_camera()
+    process_camera(broker_address)
 
 
 if __name__ == "__main__":
