@@ -4,17 +4,24 @@ import numpy as np
 import math
 import json
 
+ANGLE = 45
+CAMERA_SET_ID = 0
+
 def detect_object(frame, index, camera):
     frame_bgr = frame
-    frame_rgb = np.asarray(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB), dtype='uint8')
+    frame_rgb = np.asarray(cv2.cvtColor(
+        frame_bgr, cv2.COLOR_BGR2RGB), dtype='uint8')
     fram_red = frame_rgb[:, :, 0]
-    frame_gray = np.asarray(cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY), dtype='uint8')
-    frame_sub = np.maximum(np.subtract(fram_red, frame_gray, dtype='int8'), np.zeros([1080, 1920]))
+    frame_gray = np.asarray(cv2.cvtColor(
+        frame_rgb, cv2.COLOR_RGB2GRAY), dtype='uint8')
+    frame_sub = np.maximum(np.subtract(
+        fram_red, frame_gray, dtype='int8'), np.zeros([1080, 1920]))
 
     frame_sub = frame_sub.astype('uint8')
     frame_filterd = cv2.medianBlur(frame_sub, 5)
     ret, thresh = cv2.threshold(frame_sub, 25, 255, cv2.THRESH_BINARY)
-    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    im2, contours, hierarchy = cv2.findContours(
+        thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
 
     cx = 0
     cy = 0
@@ -24,25 +31,29 @@ def detect_object(frame, index, camera):
             if M['m00'] > 5:
                 x, y, w, h = cv2.boundingRect(cont)
                 cv2.drawContours(frame_bgr, cont, -1, 255, 3)
-                cv2.rectangle(frame_bgr, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv2.rectangle(frame_bgr, (x, y),
+                              (x + w, y + h), (0, 255, 0), 2)
                 cx = int(M['m10']/M['m00'])
                 cy = int(M['m01']/M['m00'])
                 cv2.circle(frame_bgr, (cx, cy), 5, (0, 255, 0), -1)
                 cv2.putText(frame_bgr, "cx: " + str(cx) + " cy: " + str(cy), (cx + 20, cy + 20),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                area = M['m00']
+                cv2.putText(frame_bgr, "Area: %f" % area, cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5, (0, 255, 0), 2)
         cv2.imshow(index, frame_bgr)
     return cx, cy
 
 
 def measure_distance(cx1, cy1, cx2, cy2):
-    
+
     pass
 
 
 def process_camera(broker_address):
     camera1 = cv2.VideoCapture(1)
     # camera2 = cv2.VideoCapture(2)
- 
+
     # camera1.set(cv2.CAP_PROP_BRIGHTNESS, -10)
     camera1.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
     camera1.set(cv2.CAP_PROP_EXPOSURE, 0.0025)
@@ -53,7 +64,7 @@ def process_camera(broker_address):
     # camera2.set(cv2.CAP_PROP_EXPOSURE, 1)
     # camera2.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
     # camera2.set(cv2.CAP_PROP_CONTRAST, 32)
-    
+
     print("capture 1 is open: " + str(camera1.isOpened()))
     # print("capture 2 is open: " + str(camera2.isOpened()))
 
@@ -69,7 +80,7 @@ def process_camera(broker_address):
 
             # detect target
             # cv2.imshow('ori', frame_bgr)
-            detect_object(frame_bgr, 'cam 1', camera1)
+            cx1, cy1 = detect_object(frame_bgr, 'cam 1', camera1)
             # cx2, cy2 = detect_object(frame_bgr_2, 'cam 2')
 
             # measure distance
