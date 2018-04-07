@@ -3,9 +3,11 @@ import paho.mqtt.client as mqtt
 import numpy as np
 import math
 import json
+import time
 
 ANGLE = 45
 CAMERA_SET_ID = 0
+
 
 def detect_object(frame, index, camera):
     frame_bgr = frame
@@ -19,7 +21,15 @@ def detect_object(frame, index, camera):
 
     frame_sub = frame_sub.astype('uint8')
     frame_filterd = cv2.medianBlur(frame_sub, 5)
-    ret, thresh = cv2.threshold(frame_sub, 25, 255, cv2.THRESH_BINARY)
+
+    # size = np.asarray(frame_filterd).shape
+    # r = size[0]
+    # lb = int(r / 2)
+    # ub = r - 1
+    # frame_filterd_crop = frame_filterd[lb:ub,:]
+    # cv2.imshow('crop', frame_filterd_crop)
+
+    ret, thresh = cv2.threshold(frame_filterd, 25, 255, cv2.THRESH_BINARY)
     im2, contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
 
@@ -39,8 +49,8 @@ def detect_object(frame, index, camera):
                 cv2.putText(frame_bgr, "cx: " + str(cx) + " cy: " + str(cy), (cx + 20, cy + 20),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 area = M['m00']
-                cv2.putText(frame_bgr, "Area: %f" % area, cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5, (0, 255, 0), 2)
+                # cv2.putText(frame_bgr, "Area: %f" % area, cv2.FONT_HERSHEY_SIMPLEX,
+                #             0.5, (0, 255, 0), 2)
         cv2.imshow(index, frame_bgr)
     return cx, cy
 
@@ -57,6 +67,7 @@ def process_camera(broker_address):
     # camera1.set(cv2.CAP_PROP_BRIGHTNESS, -10)
     camera1.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
     camera1.set(cv2.CAP_PROP_EXPOSURE, 0.0025)
+    camera1.set(cv2.CAP_PROP_GAIN, 0.6)
     camera1.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     camera1.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     # camera1.set(cv2.CAP_PROP_CONTRAST, 32)
@@ -80,7 +91,10 @@ def process_camera(broker_address):
 
             # detect target
             # cv2.imshow('ori', frame_bgr)
+            start = time.time()
             cx1, cy1 = detect_object(frame_bgr, 'cam 1', camera1)
+            end = time.time()
+            print(end - start)
             # cx2, cy2 = detect_object(frame_bgr_2, 'cam 2')
 
             # measure distance
