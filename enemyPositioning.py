@@ -8,6 +8,7 @@ import time
 ANGLE = 45
 CAMERA_SET_ID = 0
 
+
 def detect_object(frame, index, camera):
     st1 = time.time()
     if index == 'cam 2':
@@ -23,9 +24,11 @@ def detect_object(frame, index, camera):
         fram_red, frame_gray, dtype='int8'), np.zeros([480,640]))
     frame_sub = frame_sub.astype('uint8')
     frame_filterd = cv2.medianBlur(frame_sub, 5)
+
    # cv2.imshow(index, frame_bgr)
    # return 1, 2
     ret, thresh = cv2.threshold(frame_sub, 25, 255, cv2.THRESH_BINARY)
+
     im2, contours, hierarchy = cv2.findContours(
         thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     cx = 0
@@ -73,6 +76,7 @@ def process_camera(client,broker):
     camera1.set(cv2.CAP_PROP_GAIN, 0.6)
     camera1.set(cv2.CAP_PROP_FRAME_WIDTH,wd)
     camera1.set(cv2.CAP_PROP_FRAME_HEIGHT, hd)
+
     # camera1.set(cv2.CAP_PROP_CONTRAST, 32)
     camera2.set(cv2.CAP_PROP_GAIN, 0.6)
     camera2.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
@@ -100,6 +104,7 @@ def process_camera(client,broker):
             print("Get TIme is %.2gs" %(en1-start))
             # detect target
             # cv2.imshow('ori', frame_bgr)
+
             cx1, cy1,th1, misaka1 = detect_object(frame_bgr, 'cam 1', camera1)
             cx2, cy2,th2, misaka2 = detect_object(frame_bgr_2, 'cam 2',camera2)
             shana = 0
@@ -116,6 +121,7 @@ def process_camera(client,broker):
            #                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
             end = time.time()
             print("Total TIme is %.2gs" %(end-start))
+
 
             # measure distance
             # measure_distance(cx1, cy1, cx2, cy2)
