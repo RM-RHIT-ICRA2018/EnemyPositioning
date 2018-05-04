@@ -1,12 +1,16 @@
 import paho.mqtt.client as mqtt
-import time
+
+pi_id = "EP4"
+
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Successfully connected with result code " + str(rc))
-        client.subscribe("/ENEMIES")
+		global pi_id
+        client.publish("/ENEMIES/" + pi_id)
     else:
         print("Bad connection returned code=", rc)
+
 
 def on_message(client, userdata, message):
     print("message received ", str(message.payload.decode("utf-8")))
@@ -14,22 +18,22 @@ def on_message(client, userdata, message):
     print("message qos=", message.qos)
     print("message retain flag=", message.retain)
 
-    if message.topic == "/ENEMIES":
-        print("message from enemies")
-
-def on_subscribe(client, userdata, mid, granted_qos):
-    print("Successfully subscribe topic" + str(client))
 
 def main():
-    client = mqtt.Client("ENEMY_IC")
+	global pi_id
+    client = mqtt.Client(pi_id)
     broker_address = "192.168.1.2"
     client.on_connect = on_connect
     client.on_message = on_message
-    client.on_subscribe = on_subscribe
 
-    client.connect(broker_address, 1883, 60)
-    print("MQTT client connecting to host [" + broker_address + "]")
     client.loop_forever()
+	
+	enemy_angle = 40
+	angle_json = json.dumps({
+		'EnemyAngle': enemy_angle
+	})
+	while True:
+		client.publish("/ENEMIES/" + pi_id, angle_json)
 
 if __name__ == "__main__":
     main()
