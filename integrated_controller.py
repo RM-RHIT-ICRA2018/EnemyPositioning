@@ -9,6 +9,7 @@ def on_connect(client, userdata, flags, rc):
         print("Bad connection returned code=", rc)
 
 def on_message(client, userdata, message):
+    print("here")
     print("message received ", str(message.payload.decode("utf-8")))
     print("message topic=", message.topic)
     print("message qos=", message.qos)

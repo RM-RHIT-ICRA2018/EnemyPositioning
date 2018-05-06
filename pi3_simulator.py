@@ -6,7 +6,7 @@ pi_id = "EP3"
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Successfully connected with result code " + str(rc))
-		global pi_id
+        global pi_id
         client.publish("/ENEMIES/" + pi_id)
     else:
         print("Bad connection returned code=", rc)
