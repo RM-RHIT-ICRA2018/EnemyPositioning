@@ -1,7 +1,11 @@
 import paho.mqtt.client as mqtt
+import json
+import time
 
 pi_id = "EP2"
 
+def on_log(client, userdata, level, buf):
+    print(level, buf)
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -18,22 +22,29 @@ def on_message(client, userdata, message):
     print("message qos=", message.qos)
     print("message retain flag=", message.retain)
 
+def on_disconnect(client, userdata,rc=0):
+    logging.debug("DisConnected result code "+str(rc))
+    client.loop_stop()
 
-def main():
-	global pi_id
-    client = mqtt.Client(pi_id)
-    broker_address = "192.168.1.2"
-    client.on_connect = on_connect
-    client.on_message = on_message
+client = mqtt.Client(pi_id)
+broker_address = "192.168.1.2"
+client.on_connect = on_connect
+client.on_message = on_message
+client.on_log = on_log
+client.on_disconnect = on_disconnect
 
-    client.loop_forever()
-	
-	enemy_angle = 40
-	angle_json = json.dumps({
-		'EnemyAngle': enemy_angle
-	})
-	while True:
-		client.publish("/ENEMIES/" + pi_id, angle_json)
+print("MQTT client connecting to host [" + broker_address + "]")
+client.connect(broker_address, 1883, 60)
 
-if __name__ == "__main__":
-    main()
+# client.loop_start()
+
+enemy_angle = 40
+angle_json = json.dumps({
+   'EnemyAngle': enemy_angle
+})
+
+print("publishing topic")
+while True:
+    time.sleep(0.01)
+    client.publish("/ENEMIES/" + pi_id, angle_json)
+    client.loop(0.03)
