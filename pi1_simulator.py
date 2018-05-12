@@ -27,7 +27,7 @@ def on_disconnect(client, userdata,rc=0):
     client.loop_stop()
 
 client = mqtt.Client(pi_id)
-broker_address = "192.168.1.2"
+broker_address = "mosquitto.csse.rose-hulman.edu"
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_log = on_log
